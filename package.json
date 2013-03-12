@@ -1,0 +1,28 @@
+{
+	"name": "dependency-resolver",
+	"description": "",
+	"version": "0.0.1",
+	"author": "popeindustries <alex@pope-industries.com>",
+	"keywords": [],
+	"dependencies": {
+	},
+	"devDependencies": {
+		"should": "*",
+		"mocha": "*",
+		"rimraf": "*"
+	},
+	"main": "index.js",
+	"scripts": {
+		"test": "mocha --reporter spec --require should"
+	},
+	"engines": {
+		"node": ">=0.8.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/popeindustries/dependency-resolver.git"
+	},
+  "readmeFilename": "README.md",
+	"readme": "",
+	"license": "MIT"
+}
