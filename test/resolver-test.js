@@ -4,42 +4,31 @@ var resolver = require('..')
 	, should = require('should');
 
 describe('dependency-resolver', function() {
-	beforeEach(function() {
-		this.item = {
-			filepath:'hey/ho',
-			basename:'ho',
-			content:'hey ho',
-			type:'js'
-		}
+	before(function() {
+		process.chdir('./test/fixtures');
 	});
-	it('should accept an object with "filepath", "content", "type", and "basename" properties', function(done) {
-		resolver(this.item, function(err, item) {
-			should.not.exist(err);
-			should.exist(item);
-			done();
-		});
+	it('should resolve an absolute path', function() {
+		resolver('', path.resolve('foo.js')).should.eql(path.resolve('foo.js'));
 	});
-	it('should return an error when passed an object that doesn\'t include the required properties', function(done) {
-		resolver({hey:'ho'}, function(err, item) {
-			should.exist(err);
-			should.not.exist(item);
-			done();
-		});
+	it('should resolve a relative path to a file in the same directory', function() {
+		resolver(path.resolve('foo.js'), './baz').should.eql(path.resolve('baz.js'));
 	});
-	it('should decorate the passed object with an "id"', function(done) {
-		resolver(this.item, function(err, item) {
-			item.should.have.property('id');
-			done();
-		});
+	it('should resolve a relative path to a file in a child directory', function() {
+		resolver(path.resolve('foo.js'), './nested/foo').should.eql(path.resolve('nested/foo.js'));
 	});
-	it('should decorate the passed object with a "dependencies" array', function(done) {
-		resolver(this.item, function(err, item) {
-			item.should.have.property('dependencies');
-			done();
-		});
+	it('should resolve a relative path to a file in a parent directory', function() {
+		resolver(path.resolve('nested/foo.js'), '../baz').should.eql(path.resolve('baz.js'));
 	});
-	it('should generate dependency objects that include both an "id" and "source" properties');
-	it('should resolve absolute dependency references');
-	it('should resolve relative dependency references');
-	it('should resolve node_module dependency references by parsing the "main" field of a "package.json" file');
+	it('should not resolve a file with an unkown extension', function() {
+		resolver(path.resolve('foo.js'), './bar').should.not.be.ok;
+	});
+	it('should resolve a file with an unkown extension if optionally specified', function() {
+		resolver(path.resolve('foo.js'), './bar', {types: ['js', 'coffee', 'css']}).should.eql(path.resolve('bar.coffee'));
+	});
+	it('should resolve a node_module path containing a package.json file and a "main" field', function() {
+		resolver('', 'foo').should.eql(path.resolve('node_modules/foo/foo.js'));
+	});
+	it('should resolve a node_module path with no package.json file', function() {
+		resolver('', 'bar').should.eql(path.resolve('node_modules/bar/index.js'));
+	});
 });
