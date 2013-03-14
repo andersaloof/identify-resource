@@ -1,9 +1,9 @@
 {
 	"name": "dependency-resolver",
-	"description": "",
+	"description": "Resolve the file path to a dependency called via 'require()' or '@import'",
 	"version": "0.0.1",
 	"author": "popeindustries <alex@pope-industries.com>",
-	"keywords": [],
+	"keywords": ["modules", "dependency", "cjs", "css", "buddy"],
 	"dependencies": {
 	},
 	"devDependencies": {
