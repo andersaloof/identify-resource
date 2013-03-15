@@ -1,9 +1,9 @@
 {
 	"name": "dependency-resolver",
-	"description": "Resolve the file path to a dependency called via 'require()' or '@import'",
-	"version": "0.0.1",
+	"description": "Resolves the file paths to js and css dependencies",
+	"version": "0.1.0",
 	"author": "popeindustries <alex@pope-industries.com>",
-	"keywords": ["modules", "dependency", "cjs", "css", "buddy"],
+	"keywords": ["modules", "dependency", "js", "css", "buddy"],
 	"dependencies": {
 	},
 	"devDependencies": {
@@ -23,6 +23,6 @@
 		"url": "git://github.com/popeindustries/dependency-resolver.git"
 	},
   "readmeFilename": "README.md",
-	"readme": "",
+	"readme": "[![Build Status](https://travis-ci.org/popeindustries/dependency-resolver.png)](https://travis-ci.org/popeindustries/dependency-resolver)\n\n# dependency-resolver\n\nResolves the file paths to js and css dependencies.",
 	"license": "MIT"
 }
