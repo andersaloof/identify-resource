@@ -1,5 +1,6 @@
 var path = require('path')
 	, fs = require('fs')
+	, union = require('lodash').union
 	, existsSync = fs.existsSync || path.existsSync
 	, DEFAULT = {
 		js: {
@@ -29,7 +30,7 @@ module.exports = function (filepath, dependency, options) {
 
 	// Force relative css paths
 	if (options.type == 'css'
-		&& dependency.indexOf('/') == -1
+		&& !~dependency.indexOf('/')
 		&& leadingChar != '.') {
 			dependency = './' + dependency;
 			leadingChar = '.';
@@ -86,7 +87,7 @@ function checkSources (dependency, options) {
 	for (var i = 0, n = sources.length; i < n; i++) {
 		rpath = path.resolve(sources[i], dependency);
 		// Handle node_modules
-		if (dependency.indexOf('/') == -1) {
+		if (!~dependency.indexOf('/')) {
 			if (testpath = checkPackage(rpath)) return testpath;
 		}
 		if (testpath = checkFile(rpath, options)) return testpath;
@@ -114,15 +115,4 @@ function checkPackage (filepath) {
 		}
 	}
 	return '';
-}
-
-/**
- * Get union of passed arrays
- * @param {Array} arguments
- * @returns {Array}
- */
-function union () {
-	return Array.prototype.concat.apply(Array.prototype, arguments).filter(function(el, i, array) {
-		return array.indexOf(el) == i;
-	});
 }

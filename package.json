@@ -1,10 +1,11 @@
 {
 	"name": "dependency-resolver",
 	"description": "Resolves the file paths to js and css dependencies",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"author": "popeindustries <alex@pope-industries.com>",
 	"keywords": ["modules", "dependency", "js", "css", "buddy"],
 	"dependencies": {
+		"lodash": "1.0.1"
 	},
 	"devDependencies": {
 		"should": "*",
