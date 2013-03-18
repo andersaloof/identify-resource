@@ -1,7 +1,7 @@
 {
-	"name": "dependency-resolver",
+	"name": "module-resolve",
 	"description": "Resolves the file paths to js and css dependencies",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"author": "popeindustries <alex@pope-industries.com>",
 	"keywords": ["modules", "dependency", "js", "css", "buddy"],
 	"dependencies": {
@@ -21,9 +21,9 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/popeindustries/dependency-resolver.git"
+		"url": "git://github.com/popeindustries/module-resolve.git"
 	},
   "readmeFilename": "README.md",
-	"readme": "[![Build Status](https://travis-ci.org/popeindustries/dependency-resolver.png)](https://travis-ci.org/popeindustries/dependency-resolver)\n\n# dependency-resolver\n\nResolves the file paths to js and css dependencies.",
+	"readme": "[![Build Status](https://travis-ci.org/popeindustries/module-resolve.png)](https://travis-ci.org/popeindustries/module-resolve)\n\n# dependency-resolver\n\nResolves the file paths to js and css dependencies.",
 	"license": "MIT"
 }
