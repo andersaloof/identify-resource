@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/popeindustries/dependency-resolver.png)](https://travis-ci.org/popeindustries/dependency-resolver)
+[![Build Status](https://travis-ci.org/popeindustries/identify-resource.png)](https://travis-ci.org/popeindustries/identify-resource)
 
-# dependency-resolver
+# identify-resource
 
 Resolves the file paths to js and css dependencies.

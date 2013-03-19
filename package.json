@@ -1,5 +1,5 @@
 {
-	"name": "module-resolve",
+	"name": "identify-resource",
 	"description": "Resolves the file paths to js and css dependencies",
 	"version": "0.3.0",
 	"author": "popeindustries <alex@pope-industries.com>",
@@ -21,9 +21,9 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/popeindustries/module-resolve.git"
+		"url": "git://github.com/popeindustries/identify-resource.git"
 	},
   "readmeFilename": "README.md",
-	"readme": "[![Build Status](https://travis-ci.org/popeindustries/module-resolve.png)](https://travis-ci.org/popeindustries/module-resolve)\n\n# dependency-resolver\n\nResolves the file paths to js and css dependencies.",
+	"readme": "[![Build Status](https://travis-ci.org/popeindustries/identify-resource.png)](https://travis-ci.org/popeindustries/identify-resource)\n\n# identify-resource\n\nResolves the file paths to js and css dependencies.",
 	"license": "MIT"
 }
