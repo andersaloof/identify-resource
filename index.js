@@ -1,53 +1,95 @@
 var path = require('path')
 	, fs = require('fs')
-	, union = require('lodash').union
+	, lodash = require('lodash')
+	, union = lodash.union
+	, isObject = lodash.isObject
 	, existsSync = fs.existsSync || path.existsSync
 	, DEFAULT = {
 		js: {
 			extensions: ['js'],
-			sources: ['node_modules']
+			sources: ['node_modules', '.']
 		},
 		css: {
 			extensions: ['css'],
-			sources: []
+			sources: ['.']
 		}
 	};
 
 /**
- * Resolve the path for 'dependency' from 'filepath'
+ * Resolve the path for 'dependencyID' from 'filepath'
  * @param {String} filepath
- * @param {String} dependency
- * @param {Object} options
+ * @param {String} [dependencyID]
+ * @param {Object} [options]
  * @returns {String}
  */
-module.exports = function (filepath, dependency, options) {
-	options = options || {};
-	options.type = options.type || 'js';
-	options.extensions = union(DEFAULT[options.type]['extensions'], options.extensions || []);
-	options.sources = union(DEFAULT[options.type]['sources'], options.sources || []);
-	var leadingChar = dependency.charAt(0)
-		, depFilepath;
-
-	// Force relative css paths
-	if (options.type == 'css'
-		&& !~dependency.indexOf('/')
-		&& leadingChar != '.') {
-			dependency = './' + dependency;
-			leadingChar = '.';
-	}
-
-	// Absolute
-	if (leadingChar == '/') {
-		depFilepath = checkFile(dependency, options);
-	// Relative
-	} else if (leadingChar == '.') {
-		depFilepath = checkFile(path.resolve(path.dirname(filepath), dependency), options);
-	// Additional source locations, including node_modules
+module.exports = function (filepath, dependencyID, options) {
+	// Find ID from filepath
+	if (arguments.length == 1 || (arguments.length == 2 && isObject(dependencyID))) {
+		var findPath = false
+			, ID;
+		options = dependencyID || {};
+	// Find dependencyFilepath from dependencyID
 	} else {
-		depFilepath = checkSources(dependency, options);
+		var leadingChar = dependencyID.charAt(0)
+			, findPath = true
+			, dependencyFilepath;
+		options = options || {};
 	}
-	return depFilepath;
+	// Set defaults
+	filepath = path.resolve(filepath);
+	options.type = options.type || 'js';
+	options.extensions = union(options.extensions || [], DEFAULT[options.type]['extensions']);
+	options.sources = union(options.sources || [], DEFAULT[options.type]['sources']);
+	options.sources = options.sources.map(function(source) {
+		return path.resolve(source);
+	})
+
+	if (findPath) {
+		// Force relative css paths
+		if (options.type == 'css'
+			&& !~dependencyID.indexOf('/')
+			&& leadingChar != '.') {
+				dependencyID = './' + dependencyID;
+				leadingChar = '.';
+		}
+		// Absolute
+		if (leadingChar == '/') {
+			dependencyFilepath = checkFile(dependencyID, options);
+		// Relative
+		} else if (leadingChar == '.') {
+			dependencyFilepath = checkFile(path.resolve(path.dirname(filepath), dependencyID), options);
+		// Additional source locations, including node_modules
+		} else {
+			dependencyFilepath = checkSources(dependencyID, options);
+		}
+		return dependencyFilepath;
+	} else {
+		ID = resolve(filepath, options);
+		return ID;
+	}
 };
+
+function resolve (filepath, options) {
+	var sources = options.sources
+		, id;
+	for (var i = 0, n = sources.length; i < n; i++) {
+		if (~filepath.indexOf(sources[i])) {
+			// Resolve id relative to source directory
+			id = path.relative(sources[i], filepath).replace(path.extname(filepath), '');
+			// Replace path separators
+			if (process.platform == 'win32') id = id.replace(path.sep, '/');
+			// Handle index files
+			if (/index$/.test(id)) {
+				// Rename to package
+				if (id == 'index') id = path.basename(path.join(filepath, '..'));
+				// Strip 'index'
+				else id = id.slice(0, -6);
+			}
+			return id;
+		}
+	}
+	return '';
+}
 
 /**
  * Check the location of 'filepath'
@@ -75,19 +117,19 @@ function checkFile (filepath, options) {
 }
 
 /**
- * Check the location of 'dependency' in 'options.sources'
- * @param {String} dependency
+ * Check the location of 'dependencyID' in 'options.sources'
+ * @param {String} dependencyID
  * @param {Object} options
  * @returns {String}
  */
-function checkSources (dependency, options) {
+function checkSources (dependencyID, options) {
 	var sources = options.sources
 		, rpath, testpath;
 	// Loop through sources and locate file
 	for (var i = 0, n = sources.length; i < n; i++) {
-		rpath = path.resolve(sources[i], dependency);
+		rpath = path.resolve(sources[i], dependencyID);
 		// Handle node_modules
-		if (!~dependency.indexOf('/')) {
+		if (!~dependencyID.indexOf('/')) {
 			if (testpath = checkPackage(rpath)) return testpath;
 		}
 		if (testpath = checkFile(rpath, options)) return testpath;
