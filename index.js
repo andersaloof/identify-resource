@@ -2,6 +2,7 @@ var path = require('path')
 	, fs = require('fs')
 	, lodash = require('lodash')
 	, union = lodash.union
+	, clone = lodash.clone
 	, isObject = lodash.isObject
 	, existsSync = fs.existsSync || path.existsSync
 	, DEFAULT = {
@@ -23,26 +24,26 @@ var path = require('path')
  * @returns {String}
  */
 module.exports = function (filepath, dependencyID, options) {
+	var findPath = false
+		, ID, leadingChar, dependencyFilepath;
 	// Find ID from filepath
 	if (arguments.length == 1 || (arguments.length == 2 && isObject(dependencyID))) {
-		var findPath = false
-			, ID;
 		options = dependencyID || {};
 	// Find dependencyFilepath from dependencyID
 	} else {
-		var leadingChar = dependencyID.charAt(0)
-			, findPath = true
-			, dependencyFilepath;
+		findPath = true;
+		leadingChar = dependencyID.charAt(0);
 		options = options || {};
 	}
 	// Set defaults
 	filepath = path.resolve(filepath);
+	options = clone(options, {deep:true});
 	options.type = options.type || 'js';
 	options.fileExtensions = union(options.fileExtensions || [], DEFAULT[options.type]['fileExtensions']);
 	options.sources = union(options.sources || [], DEFAULT[options.type]['sources']);
 	options.sources = options.sources.map(function(source) {
 		return path.resolve(source);
-	})
+	});
 
 	if (findPath) {
 		// Force relative css paths
