@@ -6,11 +6,11 @@ var path = require('path')
 	, existsSync = fs.existsSync || path.existsSync
 	, DEFAULT = {
 		js: {
-			extensions: ['js'],
+			fileExtensions: ['js'],
 			sources: ['node_modules', '.']
 		},
 		css: {
-			extensions: ['css'],
+			fileExtensions: ['css'],
 			sources: ['.']
 		}
 	};
@@ -38,7 +38,7 @@ module.exports = function (filepath, dependencyID, options) {
 	// Set defaults
 	filepath = path.resolve(filepath);
 	options.type = options.type || 'js';
-	options.extensions = union(options.extensions || [], DEFAULT[options.type]['extensions']);
+	options.fileExtensions = union(options.fileExtensions || [], DEFAULT[options.type]['fileExtensions']);
 	options.sources = union(options.sources || [], DEFAULT[options.type]['sources']);
 	options.sources = options.sources.map(function(source) {
 		return path.resolve(source);
@@ -64,18 +64,19 @@ module.exports = function (filepath, dependencyID, options) {
 		}
 		return dependencyFilepath;
 	} else {
-		ID = resolve(filepath, options);
+		ID = resolveFile(filepath, options);
 		return ID;
 	}
 };
 
-function resolve (filepath, options) {
+function resolveFile (filepath, options) {
 	var sources = options.sources
-		, id;
+		, id, source, parts, pkg, json, main;
 	for (var i = 0, n = sources.length; i < n; i++) {
-		if (~filepath.indexOf(sources[i])) {
+		source = sources[i];
+		if (~filepath.indexOf(source)) {
 			// Resolve id relative to source directory
-			id = path.relative(sources[i], filepath).replace(path.extname(filepath), '');
+			id = path.relative(source, filepath).replace(path.extname(filepath), '');
 			// Replace path separators
 			if (process.platform == 'win32') id = id.replace(path.sep, '/');
 			// Handle index files
@@ -84,6 +85,17 @@ function resolve (filepath, options) {
 				if (id == 'index') id = path.basename(path.join(filepath, '..'));
 				// Strip 'index'
 				else id = id.slice(0, -6);
+			// Handle node_modules
+			} else if (~source.indexOf('node_modules')) {
+				parts = filepath.split(path.sep);
+				// Trim to package root
+				pkg = parts.splice(0, parts.indexOf('node_modules') + 2).join('/');
+				// Parse package.json for 'main' field
+				if (existsSync(json = path.resolve(pkg, 'package.json'))
+					&& (main = JSON.parse(fs.readFileSync(json)).main)) {
+						// Set id if filepath is main
+						if (path.resolve(pkg, main) == filepath) id = path.basename(pkg);
+				}
 			}
 			return id;
 		}
@@ -102,14 +114,14 @@ function checkFile (filepath, options) {
 	if (path.extname(filepath).length) {
 		return existsSync(filepath) ? filepath : '';
 	} else {
-		var extensions = options.extensions
+		var fileExtensions = options.fileExtensions
 			, rpath;
-		// Loop through extensions and locate file
-		for (var i = 0, n = extensions.length; i < n; i++) {
-			rpath = path.resolve(filepath + '.' + extensions[i]);
+		// Loop through fileExtensions and locate file
+		for (var i = 0, n = fileExtensions.length; i < n; i++) {
+			rpath = path.resolve(filepath + '.' + fileExtensions[i]);
 			if (existsSync(rpath)) return rpath;
 			// Try index file
-			rpath = path.resolve(filepath + '/index.' + extensions[i]);
+			rpath = path.resolve(filepath + '/index.' + fileExtensions[i]);
 			if (existsSync(rpath)) return rpath;
 		}
 		return '';

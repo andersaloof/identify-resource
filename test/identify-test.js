@@ -24,10 +24,10 @@ describe('identify-resource', function() {
 			identify(path.resolve('foo.js'), './bar').should.not.be.ok;
 		});
 		it('should resolve a js file with an unkown extension when optionally specified', function() {
-			identify(path.resolve('foo.js'), './bar', {extensions: ['coffee']}).should.eql(path.resolve('bar.coffee'));
+			identify(path.resolve('foo.js'), './bar', {fileExtensions: ['coffee']}).should.eql(path.resolve('bar.coffee'));
 		});
 		it('should resolve a js node_module path containing a package.json file and a "main" field', function() {
-			identify('', 'foo').should.eql(path.resolve('node_modules/foo/foo.js'));
+			identify('', 'foo').should.eql(path.resolve('node_modules/foo/lib/foo.js'));
 		});
 		it('should resolve a js node_module path with no package.json file', function() {
 			identify('', 'bar').should.eql(path.resolve('node_modules/bar/index.js'));
@@ -59,8 +59,8 @@ describe('identify-resource', function() {
 		it('should resolve an ID for an index filepath in a specified source directory', function() {
 			identify(path.resolve('node_modules/bar/index.js'), {sources:['node_modules/bar']}).should.eql('bar');
 		});
-		it('should resolve an ID for an index filepath in a specified source directory', function() {
-			identify(path.resolve('node_modules/bar/index.js'), {sources:['node_modules']}).should.eql('bar');
+		it('should resolve an ID for a node_modules filepath', function() {
+			identify(path.resolve('node_modules/foo/lib/foo.js'), {sources:['node_modules']}).should.eql('foo');
 		});
 	});
 });
