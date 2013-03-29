@@ -1,3 +1,5 @@
+// TODO: case sensitivity for lookup by id?
+
 var path = require('path')
 	, fs = require('fs')
 	, lodash = require('lodash')
