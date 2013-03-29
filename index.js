@@ -27,7 +27,7 @@ var path = require('path')
  */
 module.exports = function (filepath, dependencyID, options) {
 	var findPath = false
-		, ID, leadingChar, dependencyFilepath;
+		, leadingChar, dependencyFilepath;
 	// Find ID from filepath
 	if (arguments.length == 1 || (arguments.length == 2 && isObject(dependencyID))) {
 		options = dependencyID || {};
@@ -67,8 +67,7 @@ module.exports = function (filepath, dependencyID, options) {
 		}
 		return dependencyFilepath;
 	} else {
-		ID = resolveFile(filepath, options);
-		return ID;
+		return resolveFile(filepath, options);
 	}
 };
 
