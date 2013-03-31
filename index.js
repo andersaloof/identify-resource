@@ -15,6 +15,10 @@ var path = require('path')
 		css: {
 			fileExtensions: ['css'],
 			sources: ['.']
+		},
+		html: {
+			fileExtensions: ['html'],
+			sources: ['.']
 		}
 	};
 
