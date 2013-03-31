@@ -78,7 +78,7 @@ function resolveFile (filepath, options) {
 		source = sources[i];
 		if (~filepath.indexOf(source)) {
 			// Resolve id relative to source directory
-			id = path.relative(source, filepath).replace(path.extname(filepath), '');
+			id = path.relative(source, filepath).replace(path.extname(filepath), '').toLowerCase();
 			// Replace path separators
 			if (process.platform == 'win32') id = id.replace(path.sep, '/');
 			// Handle index files
