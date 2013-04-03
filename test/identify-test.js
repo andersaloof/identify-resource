@@ -21,7 +21,7 @@ describe('identify-resource', function() {
 			identify(path.resolve('nested/foo.js'), '../baz').should.eql(path.resolve('baz.js'));
 		});
 		it('should not resolve a js file with an unkown extension', function() {
-			identify(path.resolve('foo.js'), './bar').should.not.be.ok;
+			identify(path.resolve('foo.js'), './bar.blah').should.not.be.ok;
 		});
 		it('should resolve a js file with an unkown extension when optionally specified', function() {
 			identify(path.resolve('foo.js'), './bar', {fileExtensions: ['coffee']}).should.eql(path.resolve('bar.coffee'));
@@ -36,7 +36,7 @@ describe('identify-resource', function() {
 			identify('', 'package/foo', {sources: ['src']}).should.eql(path.resolve('src/package/foo.js'));
 		});
 		it('should resolve a case sensitive js file', function() {
-			fs.existsSync(identify('', 'casesensitive')).should.be.ok;
+			fs.existsSync(identify(path.resolve('foo.js'), './casesensitive')).should.be.ok;
 		});
 		it('should resolve a css file in the same source directory', function() {
 			identify(path.resolve('bar.css'), 'foo', {type: 'css'}).should.eql(path.resolve('foo.css'));

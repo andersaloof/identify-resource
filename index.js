@@ -1,5 +1,3 @@
-// TODO: case sensitivity for lookup by id?
-
 var path = require('path')
 	, fs = require('fs')
 	, lodash = require('lodash')
@@ -116,19 +114,28 @@ function resolveFile (filepath, options) {
  * @returns {String}
  */
 function checkFile (filepath, options) {
+	var check = function(filepath) {
+		var dir = path.dirname(filepath)
+			, files = fs.readdirSync(dir)
+			, fp;
+		for (var i = 0, n = files.length; i < n; i++) {
+			fp = path.resolve(dir, files[i].toLowerCase());
+			if (filepath == fp && existsSync(fp)) return path.resolve(dir, files[i].toLowerCase());
+		}
+		return '';
+	};
+
 	// Already have a file extension
 	if (path.extname(filepath).length) {
-		return existsSync(filepath) ? filepath : '';
+		return check(filepath);
 	} else {
 		var fileExtensions = options.fileExtensions
-			, rpath;
+			, fp;
 		// Loop through fileExtensions and locate file
 		for (var i = 0, n = fileExtensions.length; i < n; i++) {
-			rpath = path.resolve(filepath + '.' + fileExtensions[i]);
-			if (existsSync(rpath)) return rpath;
+			if (fp = check(path.resolve(filepath + '.' + fileExtensions[i]))) return fp;
 			// Try index file
-			rpath = path.resolve(filepath + '/index.' + fileExtensions[i]);
-			if (existsSync(rpath)) return rpath;
+			if (fp = check(path.resolve(filepath + '/index.' + fileExtensions[i]))) return fp;
 		}
 		return '';
 	}
