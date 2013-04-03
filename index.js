@@ -114,8 +114,9 @@ function resolveFile (filepath, options) {
  * @returns {String}
  */
 function checkFile (filepath, options) {
-	console.log(filepath, path.dirname(filepath));
 	var check = function(filepath) {
+		console.log(filepath, path.dirname(filepath));
+
 		var dir = path.dirname(filepath)
 			, files = fs.readdirSync(dir)
 			, fp;
