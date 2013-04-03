@@ -49,6 +49,8 @@ module.exports = function (filepath, dependencyID, options) {
 		return path.resolve(source);
 	});
 
+	if (!existsSync(filepath)) return '';
+
 	if (findPath) {
 		// Force relative css paths
 		if (options.type == 'css'
@@ -116,7 +118,6 @@ function resolveFile (filepath, options) {
 function checkFile (filepath, options) {
 	var check = function(filepath) {
 		console.log(filepath, path.dirname(filepath));
-
 		var dir = path.dirname(filepath)
 			, files = fs.readdirSync(dir)
 			, fp;

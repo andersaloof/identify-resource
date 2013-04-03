@@ -8,6 +8,9 @@ describe('identify-resource', function() {
 		process.chdir('./test/fixtures');
 	});
 	describe('indentifying dependency filepath', function() {
+		it('should not resolve a file if the reference file doesn\'t exist', function() {
+			identify(path.resolve('blah.js'), '').should.not.be.ok;
+		});
 		it('should resolve an absolute path', function() {
 			identify('', path.resolve('foo.js')).should.eql(path.resolve('foo.js'));
 		});
