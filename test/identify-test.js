@@ -35,6 +35,9 @@ describe('identify-resource', function() {
 		it('should resolve a js file in a separate source directory when optionally specified', function() {
 			identify('', 'package/foo', {sources: ['src']}).should.eql(path.resolve('src/package/foo.js'));
 		});
+		it('should resolve a case sensitive js file', function() {
+			fs.existsSync(identify('', 'casesensitive')).should.be.ok;
+		});
 		it('should resolve a css file in the same source directory', function() {
 			identify(path.resolve('bar.css'), 'foo', {type: 'css'}).should.eql(path.resolve('foo.css'));
 		});
