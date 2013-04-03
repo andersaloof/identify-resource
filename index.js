@@ -86,7 +86,7 @@ function resolveFile (filepath, options) {
 			// Replace path separators
 			if (process.platform == 'win32') id = id.replace(path.sep, '/');
 			// Handle index files
-			if (/index$/.test(id)) {
+			if (options.type != 'html' && /index$/.test(id)) {
 				// Rename to package
 				if (id == 'index') id = path.basename(path.join(filepath, '..'));
 				// Strip 'index'
