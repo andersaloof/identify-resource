@@ -118,12 +118,13 @@ function resolveFile (filepath, options) {
 function checkFile (filepath, options) {
 	var check = function(filepath) {
 		var dir = path.dirname(filepath)
-			, files, fp;
+			, files, fp, fplc;
 		if (existsSync(dir)) {
 			files = fs.readdirSync(dir);
 			for (var i = 0, n = files.length; i < n; i++) {
-				fp = path.join(dir, files[i].toLowerCase());
-				if (filepath == fp && existsSync(fp)) return path.resolve(dir, files[i]);
+				fplc = path.join(dir, files[i].toLowerCase());
+				fp = path.join(dir, files[i]);
+				if (filepath == fplc && existsSync(fp)) return fp;
 			}
 		}
 		return '';
@@ -153,15 +154,15 @@ function checkFile (filepath, options) {
  */
 function checkSources (dependencyID, options) {
 	var sources = options.sources
-		, rpath, testpath;
+		, fp, testpath;
 	// Loop through sources and locate file
 	for (var i = 0, n = sources.length; i < n; i++) {
-		rpath = path.resolve(sources[i], dependencyID);
+		fp = path.resolve(sources[i], dependencyID);
 		// Handle node_modules
 		if (!~dependencyID.indexOf('/')) {
-			if (testpath = checkPackage(rpath)) return testpath;
+			if (testpath = checkPackage(fp)) return testpath;
 		}
-		if (testpath = checkFile(rpath, options)) return testpath;
+		if (testpath = checkFile(fp, options)) return testpath;
 	}
 	return '';
 }
@@ -172,17 +173,17 @@ function checkSources (dependencyID, options) {
  * @returns {String}
  */
 function checkPackage (filepath) {
-	var json, main, rpath;
+	var json, main, fp;
 	if (existsSync(filepath)) {
 		// Parse package.json for 'main' field
 		if (existsSync(json = path.resolve(filepath, 'package.json'))
 			&& (main = JSON.parse(fs.readFileSync(json)).main)) {
-				rpath = path.resolve(filepath, main);
-				if (existsSync(rpath)) return rpath;
+				fp = path.resolve(filepath, main);
+				if (existsSync(fp)) return fp;
 		// Fallback to index.js
 		} else {
-			rpath = path.resolve(filepath, 'index.js');
-			if (existsSync(rpath)) return rpath;
+			fp = path.resolve(filepath, 'index.js');
+			if (existsSync(fp)) return fp;
 		}
 	}
 	return '';
