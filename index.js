@@ -117,13 +117,14 @@ function resolveFile (filepath, options) {
  */
 function checkFile (filepath, options) {
 	var check = function(filepath) {
-		console.log(filepath, path.dirname(filepath));
 		var dir = path.dirname(filepath)
-			, files = fs.readdirSync(dir)
-			, fp;
-		for (var i = 0, n = files.length; i < n; i++) {
-			fp = path.resolve(dir, files[i].toLowerCase());
-			if (filepath == fp && existsSync(fp)) return path.resolve(dir, files[i].toLowerCase());
+			, files, fp;
+		if (existsSync(dir)) {
+			files = fs.readdirSync(dir);
+			for (var i = 0, n = files.length; i < n; i++) {
+				fp = path.join(dir, files[i].toLowerCase());
+				if (filepath == fp && existsSync(fp)) return path.resolve(dir, files[i]);
+			}
 		}
 		return '';
 	};
@@ -136,9 +137,9 @@ function checkFile (filepath, options) {
 			, fp;
 		// Loop through fileExtensions and locate file
 		for (var i = 0, n = fileExtensions.length; i < n; i++) {
-			if (fp = check(path.resolve(filepath + '.' + fileExtensions[i]))) return fp;
+			if (fp = check(filepath + '.' + fileExtensions[i])) return fp;
 			// Try index file
-			if (fp = check(path.resolve(filepath + '/index.' + fileExtensions[i]))) return fp;
+			if (fp = check(path.resolve(filepath, 'index.' + fileExtensions[i]))) return fp;
 		}
 		return '';
 	}
