@@ -90,7 +90,7 @@ function resolveFile (filepath, options) {
 				// Rename to package
 				if (id == 'index') id = path.basename(path.join(filepath, '..'));
 				// Strip 'index'
-				else id = id.slice(0, -6);
+				// else id = id.slice(0, -6);
 			// Handle node_modules
 			} else if (~source.indexOf('node_modules')) {
 				parts = filepath.split(path.sep);
