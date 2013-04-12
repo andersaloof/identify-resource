@@ -8,7 +8,7 @@ var path = require('path')
 	, DEFAULT = {
 		js: {
 			fileExtensions: ['js'],
-			sources: ['node_modules', '.']
+			sources: ['.']
 		},
 		css: {
 			fileExtensions: ['css'],
@@ -67,7 +67,9 @@ module.exports = function (filepath, dependencyID, options) {
 			dependencyFilepath = checkFile(path.resolve(path.dirname(filepath), dependencyID), options);
 		// Additional source locations, including node_modules
 		} else {
-			dependencyFilepath = checkSources(dependencyID, options);
+			dependencyFilepath = !~dependencyID.indexOf('/')
+				? checkPackage(filepath, dependencyID)
+				: checkSources(dependencyID, options);
 		}
 		return dependencyFilepath;
 	} else {
@@ -75,38 +77,52 @@ module.exports = function (filepath, dependencyID, options) {
 	}
 };
 
+/**
+ * Resolve ID for 'filepath'
+ * @param {String} filepath
+ * @param {Object} options
+ * @returns {String}
+ */
 function resolveFile (filepath, options) {
-	var sources = options.sources
-		, id, source, parts, pkg, json, main;
-	for (var i = 0, n = sources.length; i < n; i++) {
-		source = sources[i];
-		if (~filepath.indexOf(source)) {
-			// Resolve id relative to source directory
-			id = path.relative(source, filepath).replace(path.extname(filepath), '').toLowerCase();
-			// Replace path separators
-			if (process.platform == 'win32') id = id.replace(path.sep, '/');
-			// Handle index files
-			if (options.type != 'html' && /index$/.test(id)) {
-				// Rename to package
-				if (id == 'index') id = path.basename(path.join(filepath, '..'));
-				// Strip 'index'
-				// else id = id.slice(0, -6);
-			// Handle node_modules
-			} else if (~source.indexOf('node_modules')) {
-				parts = filepath.split(path.sep);
-				// Trim to package root
-				pkg = parts.splice(0, parts.indexOf('node_modules') + 2).join('/');
-				// Parse package.json for 'main' field
-				if (existsSync(json = path.resolve(pkg, 'package.json'))
-					&& (main = JSON.parse(fs.readFileSync(json)).main)) {
-						// Set id if filepath is main
-						if (path.resolve(pkg, main) == filepath) id = path.basename(pkg);
+	var sources = clone(options.sources)
+		, id = ''
+		, parts = filepath.split(path.sep)
+		, source, pkg, json, main;
+
+	// Handle node_modules separately
+	if (~parts.indexOf('node_modules')) {
+		// Trim to package root
+		pkg = parts.splice(0, parts.lastIndexOf('node_modules') + 2).join('/');
+		// Parse package.json for 'main' field to verify
+		if (existsSync(json = path.resolve(pkg, 'package.json'))
+			&& (main = JSON.parse(fs.readFileSync(json)).main)) {
+				// Set id if filepath is main
+				if (path.resolve(pkg, main) == filepath) id = path.basename(pkg);
+		} else {
+			// Try index file
+			if (path.resolve(pkg, 'index.js') == filepath) id = path.basename(pkg);
+		}
+	} else {
+		// Check sources
+		for (var i = 0, n = sources.length; i < n; i++) {
+			source = sources[i];
+			if (~filepath.indexOf(source)) {
+				// Resolve id relative to source directory
+				id = path.relative(source, filepath).replace(path.extname(filepath), '').toLowerCase();
+				// Replace path separators
+				if (process.platform == 'win32') id = id.replace(path.sep, '/');
+				// Handle index files
+				if (options.type != 'html' && /index$/.test(id)) {
+					// Rename to package
+					if (id == 'index') id = path.basename(path.join(filepath, '..'));
+					// Strip 'index'
+					// else id = id.slice(0, -6);
 				}
+				if (id) break;
 			}
-			return id;
 		}
 	}
-	return '';
+	return id;
 }
 
 /**
@@ -119,6 +135,8 @@ function checkFile (filepath, options) {
 	var check = function(filepath) {
 		var dir = path.dirname(filepath)
 			, files, fp, fplc;
+		// Support forced lowercase IDs
+		// Loop through all files in 'dir'
 		if (existsSync(dir)) {
 			files = fs.readdirSync(dir);
 			for (var i = 0, n = files.length; i < n; i++) {
@@ -158,33 +176,47 @@ function checkSources (dependencyID, options) {
 	// Loop through sources and locate file
 	for (var i = 0, n = sources.length; i < n; i++) {
 		fp = path.resolve(sources[i], dependencyID);
-		// Handle node_modules
-		if (!~dependencyID.indexOf('/')) {
-			if (testpath = checkPackage(fp)) return testpath;
-		}
 		if (testpath = checkFile(fp, options)) return testpath;
 	}
 	return '';
 }
 
 /**
- * Check the location of 'filepath' in a package directory
- * @param {String} filepath
+ * Check the location of 'pkg' in node_modules directory
+ * @param {String} pkg
  * @returns {String}
  */
-function checkPackage (filepath) {
-	var json, main, fp;
-	if (existsSync(filepath)) {
+function checkPackage (filepath, pkg) {
+	var node_modules, json, main, fp;
+	var packageDir = function(filepath) {
+		var dir = path.dirname(filepath)
+			, parent, node_modules;
+		while (true) {
+			node_modules = path.join(dir, 'node_modules');
+			if (existsSync(node_modules)) return node_modules;
+			parent = path.resolve(dir, '../');
+			if (parent === dir) {
+				return '';
+			}	else {
+				dir = parent;
+			}
+		}
+	};
+
+	if (node_modules = packageDir(filepath)) {
 		// Parse package.json for 'main' field
-		if (existsSync(json = path.resolve(filepath, 'package.json'))
+		fp = path.resolve(node_modules, pkg);
+		if (existsSync(json = path.resolve(fp, 'package.json'))
 			&& (main = JSON.parse(fs.readFileSync(json)).main)) {
-				fp = path.resolve(filepath, main);
-				if (existsSync(fp)) return fp;
-		// Fallback to index.js
+					fp = path.resolve(fp, main);
+					if (existsSync(fp)) return fp;
+			// Fallback to index.js
 		} else {
-			fp = path.resolve(filepath, 'index.js');
+			fp = path.resolve(fp, 'index.js');
 			if (existsSync(fp)) return fp;
 		}
+		return '';
+	} else {
+		return '';
 	}
-	return '';
 }

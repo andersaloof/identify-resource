@@ -30,10 +30,16 @@ describe('identify-resource', function() {
 			identify(path.resolve('foo.js'), './bar', {fileExtensions: ['coffee']}).should.eql(path.resolve('bar.coffee'));
 		});
 		it('should resolve a js node_module path containing a package.json file and a "main" field', function() {
-			identify('', 'foo').should.eql(path.resolve('node_modules/foo/lib/foo.js'));
+			identify(path.resolve('baz.js'), 'foo').should.eql(path.resolve('node_modules/foo/lib/foo.js'));
+		});
+		it('should resolve a js node_module path from a deeply nested location', function() {
+			identify(path.resolve('src/package/foo.js'), 'foo').should.eql(path.resolve('node_modules/foo/lib/foo.js'));
+		});
+		it('should not resolve a sub-module of a js node_module path from a deeply nested location', function() {
+			identify(path.resolve('src/package/foo.js'), 'bat').should.eql('');
 		});
 		it('should resolve a js node_module path with no package.json file', function() {
-			identify('', 'bar').should.eql(path.resolve('node_modules/bar/index.js'));
+			identify(path.resolve('baz.js'), 'bar').should.eql(path.resolve('node_modules/bar/index.js'));
 		});
 		it('should resolve a js file in a separate source directory when optionally specified', function() {
 			identify('', 'package/foo', {sources: ['src']}).should.eql(path.resolve('src/package/foo.js'));
@@ -62,11 +68,14 @@ describe('identify-resource', function() {
 		it('should resolve an ID for a filepath nested in a specified source directory', function() {
 			identify(path.resolve('src/package/foo.js'), {sources:['src']}).should.eql('package/foo');
 		});
-		it('should resolve an ID for an index filepath in a specified source directory', function() {
-			identify(path.resolve('node_modules/bar/index.js'), {sources:['node_modules/bar']}).should.eql('bar');
+		it('should resolve an ID for an index filepath in a specified root source directory', function() {
+			identify(path.resolve('src/index.js'), {sources:['src']}).should.eql('src');
 		});
-		it('should resolve an ID for a node_modules filepath', function() {
-			identify(path.resolve('node_modules/foo/lib/foo.js'), {sources:['node_modules']}).should.eql('foo');
+		it('should resolve an ID for a node_modules index file', function() {
+			identify(path.resolve('node_modules/bar/index.js'), {}).should.eql('bar');
+		});
+		it('should resolve an ID for a node_modules filepath listed in package.json', function() {
+			identify(path.resolve('node_modules/foo/lib/foo.js'), {}).should.eql('foo');
 		});
 	});
 });
