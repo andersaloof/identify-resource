@@ -21,69 +21,16 @@ var path = require('path')
 	};
 
 /**
- * Resolve the path for 'dependencyID' from 'filepath'
- * @param {String} filepath
- * @param {String} [dependencyID]
- * @param {Object} [options]
- * @returns {String}
- */
-module.exports = function (filepath, dependencyID, options) {
-	var findPath = false
-		, leadingChar, dependencyFilepath;
-	// Find ID from filepath
-	if (arguments.length == 1 || (arguments.length == 2 && isObject(dependencyID))) {
-		options = dependencyID || {};
-	// Find dependencyFilepath from dependencyID
-	} else {
-		findPath = true;
-		leadingChar = dependencyID.charAt(0);
-		options = options || {};
-	}
-	// Set defaults
-	filepath = path.resolve(filepath);
-	options = clone(options, {deep:true});
-	options.type = options.type || 'js';
-	options.fileExtensions = union(options.fileExtensions || [], DEFAULT[options.type]['fileExtensions']);
-	options.sources = union(options.sources || [], DEFAULT[options.type]['sources']);
-	options.sources = options.sources.map(function(source) {
-		return path.resolve(source);
-	});
-
-	if (!existsSync(filepath)) return '';
-
-	if (findPath) {
-		// Force relative css paths
-		if (options.type == 'css'
-			&& !~dependencyID.indexOf('/')
-			&& leadingChar != '.') {
-				dependencyID = './' + dependencyID;
-				leadingChar = '.';
-		}
-		// Absolute
-		if (leadingChar == '/') {
-			dependencyFilepath = checkFile(dependencyID, options);
-		// Relative
-		} else if (leadingChar == '.') {
-			dependencyFilepath = checkFile(path.resolve(path.dirname(filepath), dependencyID), options);
-		// Additional source locations, including node_modules
-		} else {
-			dependencyFilepath = !~dependencyID.indexOf('/')
-				? checkPackage(filepath, dependencyID)
-				: checkSources(dependencyID, options);
-		}
-		return dependencyFilepath;
-	} else {
-		return resolveFile(filepath, options);
-	}
-};
-
-/**
  * Resolve ID for 'filepath'
  * @param {String} filepath
  * @param {Object} options
  * @returns {String}
  */
-function resolveFile (filepath, options) {
+exports.identify = function (filepath, options) {
+	if (!existsSync(filepath)) return '';
+
+	options = fixOptions(options);
+
 	var sources = clone(options.sources)
 		, id = ''
 		, parts = filepath.split(path.sep)
@@ -123,6 +70,52 @@ function resolveFile (filepath, options) {
 		}
 	}
 	return id;
+};
+
+/**
+ * Resolve the path for 'dependencyID' from 'filepath'
+ * @param {String} filepath
+ * @param {String} [dependencyID]
+ * @param {Object} [options]
+ * @returns {String}
+ */
+exports.resolve = function (filepath, dependencyID, options) {
+	if (!existsSync(filepath)) return '';
+
+	options = fixOptions(options);
+
+	var leadingChar = dependencyID.charAt(0);
+
+	// Absolute
+	if (leadingChar == '/') {
+		dependencyFilepath = checkFile(dependencyID, options);
+	// Relative
+	} else if (leadingChar == '.') {
+		dependencyFilepath = checkFile(path.resolve(path.dirname(filepath), dependencyID), options);
+	// Additional source locations, including node_modules
+	} else {
+		// Handle implicit relative paths for css by checking the current dir first
+		if (options.type == 'css') {
+			options.sources.unshift(path.dirname(filepath));
+			dependencyFilepath = checkSources(dependencyID, options);
+		} else {
+			dependencyFilepath = !~dependencyID.indexOf('/')
+				? checkPackage(filepath, dependencyID)
+				: checkSources(dependencyID, options);
+		}
+	}
+	return dependencyFilepath;
+};
+
+function fixOptions (options) {
+	options = clone(options, {deep:true}) || {};
+	options.type = options.type || 'js';
+	options.fileExtensions = union(options.fileExtensions || [], DEFAULT[options.type]['fileExtensions']);
+	options.sources = union(options.sources || [], DEFAULT[options.type]['sources']);
+	options.sources = options.sources.map(function(source) {
+		return path.resolve(source);
+	});
+	return options;
 }
 
 /**
