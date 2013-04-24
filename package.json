@@ -1,7 +1,7 @@
 {
 	"name": "identify-resource",
 	"description": "Resolves the file paths to js and css dependencies",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"author": "popeindustries <alex@pope-industries.com>",
 	"keywords": ["modules", "dependency", "js", "css", "buddy"],
 	"dependencies": {
