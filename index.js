@@ -43,11 +43,19 @@ exports.identify = function (filepath, options) {
 		// Parse package.json for 'main' field to verify
 		if (existsSync(json = path.resolve(pkg, 'package.json'))
 			&& (main = JSON.parse(fs.readFileSync(json)).main)) {
+				// Handle files with missing extension
+				if (path.extname(main) != '.js') main += '.js';
 				// Set id if filepath is main
 				if (path.resolve(pkg, main) == filepath) id = path.basename(pkg);
-		} else {
+		}
+		if (!id) {
 			// Try index file
-			if (path.resolve(pkg, 'index.js') == filepath) id = path.basename(pkg);
+			if (path.resolve(pkg, 'index.js') == filepath) {
+				id = path.basename(pkg);
+			// Full path
+			} else {
+				id = path.relative(path.join(pkg, '..'), filepath).replace(path.extname(filepath), '');
+			}
 		}
 	} else {
 		// Check sources
@@ -55,15 +63,13 @@ exports.identify = function (filepath, options) {
 			source = sources[i];
 			if (~filepath.indexOf(source)) {
 				// Resolve id relative to source directory
-				id = path.relative(source, filepath).replace(path.extname(filepath), '').toLowerCase();
+				id = path.relative(source, filepath).replace(path.extname(filepath), '');
 				// Replace path separators
 				if (process.platform == 'win32') id = id.replace(path.sep, '/');
 				// Handle index files
 				if (options.type != 'html' && /index$/.test(id)) {
 					// Rename to package
 					if (id == 'index') id = path.basename(path.join(filepath, '..'));
-					// Strip 'index'
-					// else id = id.slice(0, -6);
 				}
 				if (id) break;
 			}
@@ -125,33 +131,19 @@ function fixOptions (options) {
  * @returns {String}
  */
 function checkFile (filepath, options) {
-	var check = function(filepath) {
-		var dir = path.dirname(filepath)
-			, files, fp, fplc;
-		// Support forced lowercase IDs
-		// Loop through all files in 'dir'
-		if (existsSync(dir)) {
-			files = fs.readdirSync(dir);
-			for (var i = 0, n = files.length; i < n; i++) {
-				fplc = path.join(dir, files[i].toLowerCase());
-				fp = path.join(dir, files[i]);
-				if (filepath == fplc && existsSync(fp)) return fp;
-			}
-		}
-		return '';
-	};
-
 	// Already have a file extension
 	if (path.extname(filepath).length) {
-		return check(filepath);
+		return existsSync(filepath) ? filepath : '';
 	} else {
 		var fileExtensions = options.fileExtensions
 			, fp;
 		// Loop through fileExtensions and locate file
 		for (var i = 0, n = fileExtensions.length; i < n; i++) {
-			if (fp = check(filepath + '.' + fileExtensions[i])) return fp;
+			fp = filepath + '.' + fileExtensions[i];
+			if (existsSync(fp)) return fp;
 			// Try index file
-			if (fp = check(path.resolve(filepath, 'index.' + fileExtensions[i]))) return fp;
+			fp = path.resolve(filepath, 'index.' + fileExtensions[i]);
+			if (existsSync(fp)) return fp;
 		}
 		return '';
 	}
@@ -202,6 +194,8 @@ function checkPackage (filepath, pkg) {
 		if (existsSync(json = path.resolve(fp, 'package.json'))
 			&& (main = JSON.parse(fs.readFileSync(json)).main)) {
 					fp = path.resolve(fp, main);
+					// Handle files with missing extension
+					if (path.extname(fp) != '.js') fp += '.js';
 					if (existsSync(fp)) return fp;
 			// Fallback to index.js
 		} else {
