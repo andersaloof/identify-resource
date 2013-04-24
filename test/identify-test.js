@@ -84,5 +84,8 @@ describe('identify-resource', function() {
 		it('should resolve an ID for a node_modules filepath listed in package.json', function() {
 			identify(path.resolve('node_modules/foo/lib/foo.js'), {}).should.eql('foo');
 		});
+		it('should resolve an ID for an uppercase filepath', function() {
+			identify(path.resolve('CaseSensitive.js'), {}).should.eql('CaseSensitive');
+		});
 	});
 });

@@ -52,7 +52,7 @@ exports.identify = function (filepath, options) {
 			// Try index file
 			if (path.resolve(pkg, 'index.js') == filepath) {
 				id = path.basename(pkg);
-			// Full path
+			// Full path from package root
 			} else {
 				id = path.relative(path.join(pkg, '..'), filepath).replace(path.extname(filepath), '');
 			}
