@@ -90,7 +90,8 @@ exports.resolve = function (filepath, dependencyID, options) {
 
 	options = fixOptions(options);
 
-	var leadingChar = dependencyID.charAt(0);
+	var leadingChar = dependencyID.charAt(0)
+		, dependencyFilepath;
 
 	// Absolute
 	if (leadingChar == '/') {
