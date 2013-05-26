@@ -5,6 +5,10 @@ var path = require('path')
 	, clone = lodash.clone
 	, isObject = lodash.isObject
 	, existsSync = fs.existsSync || path.existsSync
+	, cache = {
+		js:{},
+		css:{},
+		html:{}}
 	, DEFAULT = {
 		js: {
 			fileExtensions: ['js'],
@@ -21,6 +25,31 @@ var path = require('path')
 	};
 
 /**
+ * Clear the cache
+ */
+exports.clearCache = function() {
+	cache = {js:{}, css:{}, html:{}};
+};
+
+/**
+ * Register path aliases of type {id:filepath}
+ * @param {Object} aliases
+ */
+exports.alias = function (aliases) {
+	if (aliases) {
+		var filepath, type;
+		for (var alias in aliases) {
+			filepath = path.resolve(aliases[alias]);
+			type = path.extname(filepath).slice(1);
+			if (cache[type]) {
+				cache[type][filepath] = alias;
+				cache[type][alias] = filepath;
+			}
+		}
+	}
+};
+
+/**
  * Resolve ID for 'filepath'
  * @param {String} filepath
  * @param {Object} options
@@ -30,6 +59,8 @@ exports.identify = function (filepath, options) {
 	if (!existsSync(filepath)) return '';
 
 	options = fixOptions(options);
+
+	if (cache[options.type][filepath]) return cache[options.type][filepath];
 
 	var sources = clone(options.sources)
 		, id = ''
@@ -66,7 +97,7 @@ exports.identify = function (filepath, options) {
 				id = path.relative(source, filepath).replace(path.extname(filepath), '');
 				// Replace path separators
 				if (process.platform == 'win32') id = id.replace(path.sep, '/');
-				// Handle index files
+				// Handle index files for js and css
 				if (options.type != 'html' && /index$/.test(id)) {
 					// Rename to package
 					if (id == 'index') id = path.basename(path.join(filepath, '..'));
@@ -75,43 +106,50 @@ exports.identify = function (filepath, options) {
 			}
 		}
 	}
+	// Cache
+	if (id) {
+		cache[options.type][filepath] = id;
+		cache[options.type][id] = filepath;
+	}
 	return id;
 };
 
 /**
- * Resolve the path for 'dependencyID' from 'filepath'
+ * Resolve the path for 'id' from 'filepath'
  * @param {String} filepath
- * @param {String} [dependencyID]
+ * @param {String} id
  * @param {Object} [options]
  * @returns {String}
  */
-exports.resolve = function (filepath, dependencyID, options) {
+exports.resolve = function (filepath, id, options) {
 	if (!existsSync(filepath)) return '';
 
 	options = fixOptions(options);
 
-	var leadingChar = dependencyID.charAt(0)
-		, dependencyFilepath;
+	if (cache[options.type][id]) return cache[options.type][id];
+
+	var leadingChar = id.charAt(0)
+		, depFilepath;
 
 	// Absolute
 	if (leadingChar == '/') {
-		dependencyFilepath = checkFile(dependencyID, options);
+		depFilepath = checkFile(id, options);
 	// Relative
 	} else if (leadingChar == '.') {
-		dependencyFilepath = checkFile(path.resolve(path.dirname(filepath), dependencyID), options);
+		depFilepath = checkFile(path.resolve(path.dirname(filepath), id), options);
 	// Additional source locations, including node_modules
 	} else {
 		// Handle implicit relative paths for css by checking the current dir first
 		if (options.type == 'css') {
 			options.sources.unshift(path.dirname(filepath));
-			dependencyFilepath = checkSources(dependencyID, options);
+			depFilepath = checkSources(id, options);
 		} else {
-			dependencyFilepath = !~dependencyID.indexOf('/')
-				? checkPackage(filepath, dependencyID)
-				: checkSources(dependencyID, options);
+			depFilepath = !~id.indexOf('/')
+				? checkPackage(filepath, id)
+				: checkSources(id, options);
 		}
 	}
-	return dependencyFilepath;
+	return depFilepath;
 };
 
 function fixOptions (options) {
@@ -132,21 +170,6 @@ function fixOptions (options) {
  * @returns {String}
  */
 function checkFile (filepath, options) {
-	// Already have a file extension
-	if (path.extname(filepath).length) {
-		return existsSync(filepath) ? filepath : '';
-	} else {
-		var fileExtensions = options.fileExtensions
-			, fp;
-		// Loop through fileExtensions and locate file
-		for (var i = 0, n = fileExtensions.length; i < n; i++) {
-			fp = filepath + '.' + fileExtensions[i];
-			if (existsSync(fp)) return fp;
-			// Try index file
-			fp = path.resolve(filepath, 'index.' + fileExtensions[i]);
-			if (existsSync(fp)) return fp;
-		}
-		return '';
 	var fileExtensions = options.fileExtensions
 		, fp;
 	// Loop through fileExtensions and locate file

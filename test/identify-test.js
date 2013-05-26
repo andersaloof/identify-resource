@@ -1,5 +1,7 @@
 var identify = require('..').identify
 	, resolve = require('..').resolve
+	, alias = require('..').alias
+	, clearCache = require('..').clearCache
 	, path = require('path')
 	, fs = require('fs')
 	, should = require('should');
@@ -7,6 +9,9 @@ var identify = require('..').identify
 describe('identify-resource', function() {
 	before(function() {
 		process.chdir('./test/fixtures');
+	});
+	beforeEach(function() {
+		clearCache();
 	});
 	describe('resolving dependency filepath', function() {
 		it('should not resolve a file if the reference file doesn\'t exist', function() {
@@ -86,6 +91,14 @@ describe('identify-resource', function() {
 		});
 		it('should resolve an ID for an uppercase filepath', function() {
 			identify(path.resolve('CaseSensitive.js'), {}).should.eql('CaseSensitive');
+		});
+	});
+
+	describe('aliasing a filepath ID', function() {
+		it('should cache the alias and correctly identify a resource', function() {
+			identify(path.resolve('foo-v2.0.js'), {}).should.eql('foo-v2.0');
+			alias({'foo': 'foo-v2.0.js'});
+			identify(path.resolve('foo-v2.0.js'), {}).should.eql('foo');
 		});
 	});
 });
