@@ -5,6 +5,7 @@ var path = require('path')
 	, clone = lodash.clone
 	, isObject = lodash.isObject
 	, existsSync = fs.existsSync || path.existsSync
+	, aliasStore = {}
 	, cache = {
 		js:{},
 		css:{},
@@ -29,6 +30,8 @@ var path = require('path')
  */
 exports.clearCache = function() {
 	cache = {js:{}, css:{}, html:{}};
+	// Restore aliases
+	exports.alias(aliasStore);
 };
 
 /**
@@ -45,6 +48,7 @@ exports.alias = function (aliases) {
 				cache[type][filepath] = alias;
 				cache[type][alias] = filepath;
 			}
+			aliasStore[alias] = filepath;
 		}
 	}
 };
