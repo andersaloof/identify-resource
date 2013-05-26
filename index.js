@@ -147,7 +147,19 @@ function checkFile (filepath, options) {
 			if (existsSync(fp)) return fp;
 		}
 		return '';
+	var fileExtensions = options.fileExtensions
+		, fp;
+	// Loop through fileExtensions and locate file
+	for (var i = 0, n = fileExtensions.length; i < n; i++) {
+		fp = filepath;
+		// Add extension if we don't already have valid extension
+		if (path.extname(filepath).slice(1) != fileExtensions[i]) fp += '.' + fileExtensions[i];
+		if (existsSync(fp)) return fp;
+		// Try index file
+		fp = path.resolve(filepath, 'index.' + fileExtensions[i]);
+		if (existsSync(fp)) return fp;
 	}
+	return '';
 }
 
 /**
