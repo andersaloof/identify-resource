@@ -112,6 +112,8 @@ exports.identify = function (filepath, options) {
 	}
 	// Cache
 	if (id) {
+		// Fix for buddy#40
+		id = id.replace('\\', '/');
 		cache[options.type][filepath] = id;
 		cache[options.type][id] = filepath;
 	}
