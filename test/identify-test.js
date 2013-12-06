@@ -50,6 +50,9 @@ describe('identify-resource', function() {
 		it('should resolve a js file in a separate source directory when optionally specified', function() {
 			resolve(path.resolve('foo.js'), 'package/foo', {sources: ['src']}).should.eql(path.resolve('src/package/foo.js'));
 		});
+		it.only('should resolve a js node_module path for a deeply nested node_module', function() {
+			resolve(path.resolve('node_modules/baz/node_modules/bat/bat.js'), 'foo').should.eql(path.resolve('node_modules/foo/lib/foo.js'));
+		});
 		it('should resolve a case sensitive js file', function() {
 			fs.existsSync(resolve(path.resolve('foo.js'), './CaseSensitive')).should.be.ok;
 		});

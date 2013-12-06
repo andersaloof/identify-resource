@@ -222,6 +222,7 @@ function checkPackage (filepath, pkg) {
 			node_modules = path.join(dir, 'node_modules');
 			if (existsSync(node_modules)) return node_modules;
 			parent = path.resolve(dir, '../');
+			// Reached root
 			if (parent === dir) {
 				return '';
 			}	else {
@@ -239,7 +240,7 @@ function checkPackage (filepath, pkg) {
 					// Handle files with missing extension
 					if (path.extname(fp) != '.js') fp += '.js';
 					if (existsSync(fp)) return fp;
-			// Fallback to index.js
+		// Fallback to index.js
 		} else {
 			fp = path.resolve(fp, 'index.js');
 			if (existsSync(fp)) return fp;
