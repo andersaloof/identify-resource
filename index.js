@@ -100,7 +100,7 @@ exports.identify = function (filepath, options) {
 				// Resolve id relative to source directory
 				id = path.relative(source, filepath).replace(path.extname(filepath), '');
 				// Replace path separators
-				if (process.platform == 'win32') id = id.replace(path.sep, '/');
+				if (process.platform == 'win32') id = id.replace(/\\/g, '/');
 				// Handle index files for js and css
 				if (options.type != 'html' && /index$/.test(id)) {
 					// Rename to package
